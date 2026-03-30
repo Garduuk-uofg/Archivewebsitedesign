@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtual Voice Archive</title>
+  <style>
+    /* ============================================================
+       CSS CUSTOM PROPERTIES
+    ============================================================ */
+    :root {
+      --background: #ffffff;
+      --foreground: #0a0a0f;
+      --card: #ffffff;
+      --primary: #030213;
+      --primary-fg: #ffffff;
+      --muted: #ececf0;
+      --muted-fg: #717182;
+      --border: rgba(0, 0, 0, 0.1);
+      --radius: 0.625rem;
+
+      --slate-50:  #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+
+      --blue-600:    #2563eb;
+      --emerald-600: #059669;
+      --amber-600:   #d97706;
+      --purple-600:  #9333ea;
+      --pink-600:    #db2777;
+      --red-600:     #dc2626;
+      --indigo-600:  #4f46e5;
+      --rose-600:    #e11d48;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 16px; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { background: var(--background); color: var(--foreground); line-height: 1.5; }
+
+    a { color: inherit; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { cursor: pointer; font-family: inherit; font-size: 1rem; }
+    input, select { font-family: inherit; }
+    img { display: block; max-width: 100%; }
+
+    h1 { font-size: 1.5rem;   font-weight: 500; line-height: 1.3; }
+    h2 { font-size: 1.25rem;  font-weight: 500; line-height: 1.3; }
+    h3 { font-size: 1.125rem; font-weight: 500; line-height: 1.3; }
+    h4 { font-size: 1rem;     font-weight: 500; line-height: 1.3; }
+    p  { font-size: 1rem;     line-height: 1.6; }
+
+    /* ============================================================
+       LAYOUT
+    ============================================================ */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    /* ============================================================
+       PAGE SWITCHING
+    ============================================================ */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
+    .site-header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+    }
+    .site-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .site-logo svg { width: 2rem; height: 2rem; flex-shrink: 0; }
+    .logo-title { font-size: 1.25rem; font-weight: 500; }
+    .logo-sub { font-size: 0.75rem; color: var(--muted-fg); }
+
+    .site-nav {
+      display: none;
+      align-items: center;
+      gap: 1.5rem;
+      margin-left: auto;
+    }
+    @media (min-width: 768px) { .site-nav { display: flex; } }
+    .site-nav a,
+    .site-nav button {
+      font-size: 0.875rem;
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+      cursor: pointer;
+    }
+    .site-nav a:hover,
+    .site-nav button:hover { text-decoration: underline; }
+
+    .menu-btn {
+      background: none;
+      border: none;
+      padding: 0.4rem;
+      display: flex;
+      align-items: center;
+      color: inherit;
+    }
+    @media (min-width: 768px) { .menu-btn { display: none; } }
+
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      padding: 0 1rem 1rem;
+      gap: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a,
+    .mobile-menu button {
+      font-size: 0.875rem;
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+      padding: 0.25rem 0;
+    }
+
+    /* ============================================================
+       BUTTONS
+    ============================================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, background 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+    .btn-primary { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-outline  { background: #fff; color: var(--foreground); border-color: var(--border); }
+    .btn-outline:hover  { background: var(--slate-50); }
+    .btn-ghost   { background: transparent; border-color: transparent; }
+    .btn-ghost:hover   { background: #e9ebef; }
+    .btn-icon    { padding: 0.35rem; border-radius: 50%; width: 2rem; height: 2rem; }
+    .btn-sm      { padding: 0.25rem 0.75rem; font-size: 0.8125rem; }
+
+    /* ============================================================
+       BADGES
+    ============================================================ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.15rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1px solid transparent;
+      line-height: 1.4;
+    }
+    .badge-solid   { background: var(--primary); color: #fff; }
+    .badge-outline { background: transparent; border-color: var(--border); }
+    .badge-filter  { cursor: pointer; padding: 0.3rem 0.875rem; transition: all 0.15s; }
+    .badge-filter:hover:not(.active) { background: var(--slate-100); }
+    .badge-filter.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* ============================================================
+       CARDS
+    ============================================================ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.09); }
+    .card-content { padding: 1.5rem; }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    .hero {
+      background: linear-gradient(to bottom, var(--slate-50), #fff);
+      padding: 4rem 0;
+    }
+    @media (min-width: 768px) { .hero { padding: 6rem 0; } }
+    .hero-inner { max-width: 56rem; margin: 0 auto; text-align: center; }
+    .hero-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 500;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+    .hero-desc {
+      color: var(--muted-fg);
+      margin-bottom: 2rem;
+      font-size: 1.125rem;
+      max-width: 42rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-search {
+      display: flex;
+      gap: 0.75rem;
+      max-width: 42rem;
+      margin: 0 auto;
+    }
+    .search-wrap { flex: 1; position: relative; }
+    .search-wrap .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1rem;
+      height: 1rem;
+      color: var(--muted-fg);
+      pointer-events: none;
+    }
+    .text-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--slate-50);
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .text-input:focus { border-color: var(--slate-400); background: #fff; }
+
+    /* ============================================================
+       SEARCH RESULTS (HOME)
+    ============================================================ */
+    .search-results-section { background: var(--slate-50); padding: 3rem 0; }
+    .search-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted-fg);
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+    .search-label svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+    .results-heading { font-size: 1.875rem; font-weight: 500; margin-bottom: 0.5rem; }
+    .results-sub { color: var(--muted-fg); margin-bottom: 2rem; }
+
+    .grid-3up {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px) { .grid-3up { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .grid-3up { grid-template-columns: repeat(3, 1fr); } }
+
+    /* ============================================================
+       BROWSE BY COLLECTION
+    ============================================================ */
+    .collections-section { background: #fff; padding: 4rem 0; }
+    .section-header { text-align: center; margin-bottom: 3rem; }
+    .section-title { font-size: clamp(1.5rem, 3vw, 1.875rem); font-weight: 500; margin-bottom: 0.75rem; }
+    .section-sub { color: var(--muted-fg); max-width: 42rem; margin: 0 auto; }
+
+    .grid-cat {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @media (min-width: 768px) { .grid-cat { grid-template-columns: repeat(4, 1fr); } }
+
+    .cat-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    .cat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.09); }
+    .cat-icon-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: var(--slate-50);
+      margin-bottom: 0.75rem;
+      transition: background 0.15s;
+    }
+    .cat-card:hover .cat-icon-wrap { background: var(--slate-100); }
+    .cat-icon-wrap svg { width: 1.5rem; height: 1.5rem; }
+    .cat-name { font-size: 1rem; font-weight: 500; margin-bottom: 0.25rem; }
+    .cat-count-label { font-size: 0.875rem; color: var(--muted-fg); }
+
+    /* ============================================================
+       FEATURED VOICES TABS
+    ============================================================ */
+    .featured-section { background: var(--slate-50); padding: 4rem 0; }
+    .tabs-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .tabs-list {
+      display: inline-flex;
+      background: var(--muted);
+      border-radius: var(--radius);
+      padding: 0.25rem;
+      gap: 0.25rem;
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      padding: 0.375rem 1rem;
+      border-radius: calc(var(--radius) - 2px);
+      background: transparent;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--muted-fg);
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: #fff;
+      color: var(--foreground);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .grid-4up {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px)  { .grid-4up { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .grid-4up { grid-template-columns: repeat(4, 1fr); } }
+
+    /* ============================================================
+       VOICE CARD
+    ============================================================ */
+    .voice-card {
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+    .vc-header { padding: 1.5rem 1.5rem 0; }
+    .vc-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .vc-title {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+    .vc-speaker { font-size: 0.875rem; color: var(--muted-fg); }
+    .vc-body { padding: 1rem 1.5rem 1.5rem; flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .vc-desc {
+      font-size: 0.875rem;
+      color: var(--muted-fg);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .vc-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--muted-fg);
+    }
+    .vc-meta span { display: flex; align-items: center; gap: 0.3rem; }
+    .vc-meta svg { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    .site-footer { background: var(--slate-900); color: #fff; padding: 3rem 0; }
+    .footer-grid {
+      display: grid;
+      gap: 2rem;
+      grid-template-columns: 1fr;
+      margin-bottom: 2rem;
+    }
+    @media (min-width: 768px) { .footer-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .footer-brand { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+    .footer-brand svg { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
+    .footer-brand span { font-weight: 500; }
+    .footer-desc { font-size: 0.875rem; color: #cbd5e1; line-height: 1.6; }
+    .footer-heading { font-size: 1rem; font-weight: 500; margin-bottom: 1rem; }
+    .footer-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .footer-links a { font-size: 0.875rem; color: #cbd5e1; }
+    .footer-links a:hover { color: #fff; text-decoration: none; }
+    .footer-email-row { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .footer-email-input {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #fff;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      outline: none;
+    }
+    .footer-email-input::placeholder { color: #94a3b8; }
+    .footer-bottom {
+      border-top: 1px solid #1e293b;
+      padding-top: 2rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    /* ============================================================
+       BROWSE PAGE
+    ============================================================ */
+    .browse-bg { background: var(--slate-50); min-height: 100vh; }
+    .browse-header-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 2rem 0; }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.875rem;
+      color: var(--muted-fg);
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .back-btn:hover { color: var(--foreground); }
+    .browse-title { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 500; margin-bottom: 0.75rem; }
+    .browse-desc { color: var(--muted-fg); max-width: 48rem; }
+
+    .browse-filter-bar {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+      position: sticky;
+      top: 73px;
+      z-index: 40;
+    }
+    .filter-row {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    @media (min-width: 768px) {
+      .filter-row { flex-direction: row; align-items: center; justify-content: space-between; }
+    }
+    .search-filter-wrap { flex: 1; max-width: 28rem; position: relative; }
+    .search-filter-wrap .search-icon {
+      position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+      width: 1rem; height: 1rem; color: var(--muted-fg); pointer-events: none;
+    }
+    .filter-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      outline: none;
+      background: #fff;
+      transition: border-color 0.15s;
+    }
+    .filter-input:focus { border-color: var(--slate-400); }
+
+    .sort-row { display: flex; align-items: center; gap: 0.5rem; }
+    .sort-select {
+      padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23717182' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.5rem center;
+      background-size: 1rem;
+    }
+
+    .cat-filter-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 1rem 0; }
+    .cat-filter-label {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.875rem; margin-bottom: 0.75rem; color: var(--muted-fg);
+    }
+    .cat-filter-label svg { width: 1rem; height: 1rem; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+    .results-area { padding: 2rem 0; }
+    .results-count-text { color: var(--muted-fg); margin-bottom: 1.5rem; }
+
+    .voices-grid {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px)  { .voices-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .voices-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1280px) { .voices-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .no-results { text-align: center; padding: 4rem 1rem; }
+    .no-results p { color: var(--muted-fg); margin-bottom: 1rem; }
+
+    /* ============================================================
+       DETAIL PAGE
+    ============================================================ */
+    .detail-bg { background: var(--slate-50); min-height: 100vh; }
+    .detail-nav-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 1rem 0; }
+    .detail-hero-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 3rem 0; }
+    .detail-inner { max-width: 48rem; }
+    .detail-title { font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 500; margin: 0.75rem 0; }
+    .detail-speaker { font-size: 1.25rem; color: var(--muted-fg); margin-bottom: 1.5rem; }
+
+    .detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--muted-fg);
+      margin-bottom: 1.5rem;
+    }
+    .detail-meta span { display: flex; align-items: center; gap: 0.4rem; }
+    .detail-meta svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+
+    .separator { height: 1px; background: var(--border); margin: 1.5rem 0; }
+    .detail-desc { color: var(--muted-fg); line-height: 1.75; margin-bottom: 1.5rem; }
+    .detail-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+    .detail-section { padding: 3rem 0; }
+    .detail-section.bg-white { background: #fff; }
+    .detail-section-wrap { max-width: 56rem; margin: 0 auto; }
+    .detail-section-title { font-size: 1.5rem; font-weight: 500; margin-bottom: 1.5rem; }
+    .detail-title-row {
+      display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;
+    }
+    .detail-title-row svg { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+    .detail-title-row h2 { margin-bottom: 0; }
+
+    /* ---- Audio Player ---- */
+    .audio-player {
+      background: var(--slate-50);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+    .ap-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; }
+    .ap-title { font-weight: 500; margin-bottom: 0.25rem; font-size: 1rem; }
+    .ap-sub { font-size: 0.875rem; color: var(--muted-fg); }
+    .ap-actions { display: flex; gap: 0.25rem; }
+
+    .ap-controls { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
+    .ap-play-btn {
+      width: 2.5rem; height: 2.5rem; border-radius: 50%;
+      background: var(--primary); color: #fff; border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; transition: opacity 0.15s;
+    }
+    .ap-play-btn:hover { opacity: 0.85; }
+    .ap-play-btn svg { width: 1rem; height: 1rem; }
+
+    .ap-progress-wrap { flex: 1; }
+    .ap-bar {
+      width: 100%; height: 0.375rem; background: var(--slate-200);
+      border-radius: 9999px; cursor: pointer; position: relative; margin-bottom: 0.4rem;
+    }
+    .ap-fill {
+      height: 100%; background: var(--primary); border-radius: 9999px;
+      width: 0%; transition: width 0.1s linear;
+      pointer-events: none;
+    }
+    .ap-time { font-size: 0.75rem; color: var(--muted-fg); }
+
+    .ap-volume-row { display: flex; align-items: center; gap: 0.5rem; }
+    .ap-volume-row svg { width: 1rem; height: 1rem; color: var(--muted-fg); }
+    .volume-slider { width: 6rem; cursor: pointer; accent-color: var(--primary); }
+    .ap-note { font-size: 0.75rem; color: var(--muted-fg); font-style: italic; margin-top: 0.75rem; }
+
+    /* ---- Spec Table ---- */
+    .spec-header { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; }
+    .spec-header svg { width: 1.25rem; height: 1.25rem; color: var(--blue-600); margin-top: 0.125rem; flex-shrink: 0; }
+
+    .spec-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      column-gap: 2rem;
+    }
+    @media (min-width: 768px) { .spec-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--slate-100);
+      font-size: 0.9375rem;
+    }
+    .spec-label { color: var(--muted-fg); }
+
+    /* ---- Usage ---- */
+    .usage-block { margin-bottom: 1rem; }
+    .usage-block h3 { font-size: 1rem; font-weight: 500; margin-bottom: 0.4rem; }
+    .usage-block p { font-size: 0.875rem; color: var(--muted-fg); }
+
+    /* ---- Historical context ---- */
+    .history-text p { color: var(--muted-fg); line-height: 1.75; }
+    .history-text p + p { margin-top: 1rem; }
+
+    /* ============================================================
+       ICON COLOR HELPERS
+    ============================================================ */
+    .ic-blue    { color: var(--blue-600);    }
+    .ic-emerald { color: var(--emerald-600); }
+    .ic-amber   { color: var(--amber-600);   }
+    .ic-purple  { color: var(--purple-600);  }
+    .ic-pink    { color: var(--pink-600);    }
+    .ic-red     { color: var(--red-600);     }
+    .ic-indigo  { color: var(--indigo-600);  }
+    .ic-rose    { color: var(--rose-600);    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================
+     HEADER (always visible)
+================================================================ -->
+<header class="site-header">
+  <div class="container">
+    <div class="header-inner">
+
+      <!-- Logo -->
+      <div class="site-logo" onclick="nav('home')">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="20" height="5" x="2" y="3" rx="1"/>
+          <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/>
+          <path d="M10 12h4"/>
+        </svg>
+        <div>
+          <div class="logo-title">Virtual Voice Archive</div>
+          <div class="logo-sub">Preserving Digital Voices for anyone to use</div>
+        </div>
+      </div>
+
+      <!-- Desktop nav -->
+      <nav class="site-nav">
+        <button onclick="nav('browse')">Browse</button>
+        <a href="#">Collections</a>
+        <a href="#">About</a>
+        <a href="#">Contribute</a>
+      </nav>
+
+      <!-- Mobile menu toggle -->
+      <button class="menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="20" y1="6"  y2="6"/>
+          <line x1="4" x2="20" y1="12" y2="12"/>
+          <line x1="4" x2="20" y1="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile nav drawer -->
+    <div class="mobile-menu" id="mobileMenu">
+      <button onclick="nav('browse'); closeMobileMenu()">Browse</button>
+      <a href="#">Collections</a>
+      <a href="#">About</a>
+      <a href="#">Contribute</a>
+    </div>
+  </div>
+</header>
+
+
+<!-- ================================================================
+     HOME PAGE
+================================================================ -->
+<main id="page-home" class="page active">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <h1 class="hero-title">Preserving Synthetic Voices</h1>
+        <p class="hero-desc">
+          A digital archive dedicated to conserving TTS models, voices, and virtual assistants
+          before they're updated, deprecated, or lost forever. Every synthetic voice is a piece of digital history.
+        </p>
+        <div class="hero-search">
+          <div class="search-wrap">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input class="text-input" id="heroSearchInput" type="text" placeholder="Search voices, languages, or models..."
+              onkeydown="if(event.key==='Enter') heroSearch()" />
+          </div>
+          <button class="btn btn-primary" onclick="heroSearch()">Search</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Search Results Preview -->
+  <section class="search-results-section">
+    <div class="container">
+      <div class="search-label">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <span>Search Results</span>
+      </div>
+      <h2 class="results-heading">Results for "Piper TTS"</h2>
+      <p class="results-sub">Found 3 voices matching your search</p>
+      <div class="grid-3up" id="homeSearchGrid"></div>
+    </div>
+  </section>
+
+  <!-- Browse by Collection -->
+  <section class="collections-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Browse by Collection</h2>
+        <p class="section-sub">Explore our carefully curated collections of synthetic voices, TTS systems, and voice models</p>
+      </div>
+      <div class="grid-cat" id="homeCatGrid"></div>
+    </div>
+  </section>
+
+  <!-- Featured Voices / Tabs -->
+  <section class="featured-section">
+    <div class="container">
+      <div class="tabs-header">
+        <div>
+          <h2 class="section-title" style="margin-bottom:0.5rem">Piper TTS Collection</h2>
+          <p style="color:var(--muted-fg);font-size:0.875rem">Explore neural voice models across multiple languages and quality tiers</p>
+        </div>
+        <div class="tabs-list">
+          <button class="tab-btn active" id="tabFeatured" onclick="switchTab('featured')">Featured</button>
+          <button class="tab-btn"        id="tabRecent"   onclick="switchTab('recent')">Recently Added</button>
+        </div>
+      </div>
+
+      <div class="tab-panel active" id="panelFeatured">
+        <div class="grid-4up" id="featuredGrid"></div>
+      </div>
+      <div class="tab-panel" id="panelRecent">
+        <div class="grid-4up" id="recentGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="5" x="2" y="3" rx="1"/>
+              <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/>
+              <path d="M10 12h4"/>
+            </svg>
+            <span>Synthetic Voice Archive</span>
+          </div>
+          <p class="footer-desc">Dedicated to preserving Virtual Voices before they're lost.</p>
+        </div>
+        <div>
+          <h4 class="footer-heading">Explore</h4>
+          <ul class="footer-links">
+            <li><a href="#" onclick="nav('browse');return false">Browse Collections</a></li>
+            <li><a href="#">Search Archive</a></li>
+            <li><a href="#">Recent Additions</a></li>
+            <li><a href="#">Featured Voices</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-heading">Contribute</h4>
+          <ul class="footer-links">
+            <li><a href="#">Submit a Voice</a></li>
+            <li><a href="#">Guidelines</a></li>
+            <li><a href="#">Support Us</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-heading">Stay Updated</h4>
+          <p class="footer-desc">Get notified about new additions to the archive</p>
+          <div class="footer-email-row">
+            <input type="email" class="footer-email-input" placeholder="Enter your email" />
+            <button class="btn btn-outline" style="background:#1e293b;border-color:#334155;color:#fff;padding:0.5rem 0.75rem" title="Subscribe">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Synthetic Voice Archive. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+</main><!-- end #page-home -->
+
+
+<!-- ================================================================
+     BROWSE PAGE
+================================================================ -->
+<main id="page-browse" class="page">
+  <div class="browse-bg">
+
+    <!-- Header bar -->
+    <div class="browse-header-bar">
+      <div class="container">
+        <button class="back-btn" onclick="nav('home')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+          </svg>
+          Back to Home
+        </button>
+        <h1 class="browse-title">Browse Archive</h1>
+        <p class="browse-desc">
+          Explore the complete Piper TTS voice collection. Browse 24 neural voice models across
+          English, European, Asian, Slavic, Middle Eastern, and other languages.
+        </p>
+      </div>
+    </div>
+
+    <!-- Search + Sort (sticky) -->
+    <div class="browse-filter-bar">
+      <div class="container">
+        <div class="filter-row">
+          <div class="search-filter-wrap">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input class="filter-input" id="browseSearchInput" type="text"
+              placeholder="Search voices, speakers, or descriptions..."
+              oninput="renderBrowseGrid()" />
+          </div>
+          <div class="sort-row">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted-fg);flex-shrink:0">
+              <line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/>
+              <line x1="21" x2="12" y1="12" y2="12"/><line x1="8"  x2="3" y1="12" y2="12"/>
+              <line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/>
+              <line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/>
+              <line x1="16" x2="16" y1="18" y2="22"/>
+            </svg>
+            <select class="sort-select" id="browseSortSelect" onchange="renderBrowseGrid()">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="name">Name (A–Z)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category filter badges -->
+    <div class="cat-filter-bar">
+      <div class="container">
+        <div class="cat-filter-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+          <span>Filter by Category:</span>
+        </div>
+        <div class="badge-row" id="browseBadgeRow"></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-area">
+      <div class="container">
+        <p class="results-count-text" id="browseCount"></p>
+        <div class="voices-grid" id="browseGrid"></div>
+        <div class="no-results" id="browseNoResults" style="display:none">
+          <p>No voices found matching your criteria.</p>
+          <button class="btn btn-outline" onclick="clearBrowse()">Clear Filters</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main><!-- end #page-browse -->
+
+
+<!-- ================================================================
+     DETAIL PAGE
+================================================================ -->
+<main id="page-detail" class="page">
+  <div class="detail-bg">
+
+    <!-- Back nav -->
+    <div class="detail-nav-bar">
+      <div class="container">
+        <button class="back-btn" onclick="nav('browse')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+          </svg>
+          Back to Browse
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero info -->
+    <div class="detail-hero-bar">
+      <div class="container">
+        <div class="detail-inner">
+          <span class="badge badge-solid" id="dCategory"></span>
+          <h1 class="detail-title" id="dTitle"></h1>
+          <p class="detail-speaker" id="dSpeaker"></p>
+          <div class="detail-meta">
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 2v4"/><path d="M16 2v4"/>
+                <rect width="18" height="18" x="3" y="4" rx="2"/>
+                <path d="M3 10h18"/>
+              </svg>
+              <span id="dDate"></span>
+            </span>
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span id="dDuration"></span>
+            </span>
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span id="dLocation"></span>
+            </span>
+          </div>
+          <div class="separator"></div>
+          <p class="detail-desc" id="dDesc"></p>
+          <div class="detail-actions">
+            <button class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" x2="12" y1="15" y2="3"/>
+              </svg>
+              Download Sample
+            </button>
+            <button class="btn btn-outline">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+                <line x1="15.41" x2="8.59" y1="6.51"  y2="10.49"/>
+              </svg>
+              Share
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audio Player -->
+    <div class="detail-section bg-white">
+      <div class="container">
+        <div style="max-width:42rem;margin:0 auto">
+          <h2 class="detail-section-title">Voice Sample</h2>
+          <div class="audio-player">
+            <div class="ap-top">
+              <div>
+                <div class="ap-title" id="apTitle"></div>
+                <div class="ap-sub"   id="apSub"></div>
+              </div>
+              <div class="ap-actions">
+                <button class="btn btn-ghost btn-icon" title="Share">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+                    <line x1="15.41" x2="8.59" y1="6.51"  y2="10.49"/>
+                  </svg>
+                </button>
+                <button class="btn btn-ghost btn-icon" title="Download">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" x2="12" y1="15" y2="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="ap-controls">
+              <button class="ap-play-btn" id="apPlayBtn" onclick="togglePlay()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="6 3 20 12 6 21 6 3"/>
+                </svg>
+              </button>
+              <div class="ap-progress-wrap">
+                <div class="ap-bar" id="apBar" onclick="seekAudio(event)">
+                  <div class="ap-fill" id="apFill"></div>
+                </div>
+                <div class="ap-time" id="apTime">0:00 / 0:45</div>
+              </div>
+            </div>
+
+            <div class="ap-volume-row">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              </svg>
+              <input class="volume-slider" type="range" min="0" max="100" value="70" />
+            </div>
+
+            <p class="ap-note">Note: This is a simulated player. Real audio samples would be linked here in the deployed archive.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical Specifications -->
+    <div class="detail-section">
+      <div class="container">
+        <div class="detail-section-wrap">
+          <h2 class="detail-section-title">Technical Specifications</h2>
+          <div class="card">
+            <div class="card-content">
+              <div class="spec-header">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <rect x="9" y="9" width="6" height="6"/>
+                  <path d="M15 2v2M15 20v2M2 15h2M20 15h2M9 2v2M9 20v2M2 9h2M20 9h2"/>
+                </svg>
+                <h3>Engine Details</h3>
+              </div>
+              <div class="spec-grid">
+                <div class="spec-row">
+                  <span class="spec-label">Category</span>
+                  <span id="specCategory"></span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-label">Platform</span>
+                  <span id="specPlatform"></span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-label">Format</span>
+                  <span>WAV, 44.1 kHz</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-label">Bit Depth</span>
+                  <span>16-bit</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historical Context -->
+    <div class="detail-section bg-white">
+      <div class="container">
+        <div class="detail-section-wrap">
+          <div class="detail-title-row">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+            <h2 class="detail-section-title">Historical Context</h2>
+          </div>
+          <div class="card">
+            <div class="card-content history-text">
+              <p>
+                Piper TTS represents an important milestone in open-source neural text-to-speech technology.
+                Developed as a fast, local, and privacy-focused alternative to cloud-based TTS services,
+                Piper brings high-quality neural voice synthesis to edge devices and offline applications.
+              </p>
+              <p>
+                Each Piper voice model is trained on carefully curated datasets, supporting over 40 languages
+                with varying quality levels optimized for different use cases — from resource-constrained IoT
+                devices to high-fidelity audiobook narration. The project emphasizes accessibility, enabling
+                developers to integrate natural-sounding speech synthesis without relying on proprietary cloud
+                services.
+              </p>
+              <p>
+                Preserving these voice models ensures continued access to open-source TTS technology and
+                documents the evolution of community-driven neural voice synthesis systems.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Usage & Compatibility -->
+    <div class="detail-section">
+      <div class="container">
+        <div class="detail-section-wrap">
+          <h2 class="detail-section-title">Usage &amp; Compatibility</h2>
+          <div class="card">
+            <div class="card-content">
+              <div class="usage-block">
+                <h3>Original Platform</h3>
+                <p id="usagePlatform"></p>
+              </div>
+              <div class="separator"></div>
+              <div class="usage-block">
+                <h3>Modern Usage</h3>
+                <p>These samples are provided for educational, research, and preservation purposes.
+                   For modern projects requiring similar voice characteristics, consider using contemporary
+                   TTS engines with appropriate licensing.</p>
+              </div>
+              <div class="separator"></div>
+              <div class="usage-block">
+                <h3>Attribution</h3>
+                <p id="usageAttribution"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main><!-- end #page-detail -->
+
+
+<!-- ================================================================
+     JAVASCRIPT
+================================================================ -->
+<script>
+/* ------------------------------------------------------------------
+   DATA
+------------------------------------------------------------------ */
+const ALL_VOICES = [
+  { title:"en_US-lessac-medium",               speaker:"Piper TTS English (US)",       description:"High-quality American English neural voice with clear pronunciation. Based on the LessAC dataset, optimized for general-purpose text-to-speech applications.", date:"Released: 2023", duration:"Sample: 0:45", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-libritts-high",               speaker:"Piper TTS LibriTTS",           description:"Premium quality American English voice trained on the LibriTTS dataset. Excellent for audiobook narration and long-form content.", date:"Released: 2023", duration:"Sample: 1:20", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-ryan-medium",                 speaker:"Piper TTS English (US)",       description:"Male American English voice with warm, conversational tone. Well-suited for virtual assistants and navigation systems.", date:"Released: 2023", duration:"Sample: 0:52", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_US-amy-low",                     speaker:"Piper TTS English (US)",       description:"Lightweight female American English voice optimized for embedded systems and edge computing with minimal resource requirements.", date:"Released: 2023", duration:"Sample: 0:38", location:"Piper v1.0.0", category:"English Voices" },
+  { title:"en_GB-alan-medium",                 speaker:"Piper TTS English (UK)",       description:"British English male voice with received pronunciation. Ideal for professional applications and accessibility tools.", date:"Released: 2023", duration:"Sample: 0:55", location:"Piper v1.2.0", category:"English Voices" },
+  { title:"en_GB-southern_english_female-low", speaker:"Piper TTS English (UK)",       description:"Southern English female voice offering authentic British pronunciation in a compact, efficient model.", date:"Released: 2022", duration:"Sample: 0:42", location:"Piper v1.0.0", category:"English Voices" },
+  { title:"de_DE-thorsten-medium",             speaker:"Piper TTS German",             description:"High-quality German male voice trained on the Thorsten dataset. Clear articulation perfect for German language applications.", date:"Released: 2023", duration:"Sample: 1:05", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"fr_FR-siwis-medium",                speaker:"Piper TTS French",             description:"Natural-sounding French voice from the SIWIS dataset. Excellent pronunciation for educational and accessibility applications.", date:"Released: 2023", duration:"Sample: 0:58", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"es_ES-carlfm-x_low",               speaker:"Piper TTS Spanish (Spain)",    description:"Ultra-lightweight Spanish voice for Castilian Spanish. Optimized for IoT devices and minimal resource environments.", date:"Released: 2022", duration:"Sample: 0:35", location:"Piper v1.0.0", category:"European Voices" },
+  { title:"it_IT-riccardo_fasol-x_low",       speaker:"Piper TTS Italian",            description:"Italian male voice with authentic pronunciation. Compact model suitable for embedded applications and offline use.", date:"Released: 2023", duration:"Sample: 0:40", location:"Piper v1.1.0", category:"European Voices" },
+  { title:"nl_NL-mls-medium",                  speaker:"Piper TTS Dutch",              description:"Dutch voice trained on the Multilingual LibriSpeech dataset. Natural intonation for Netherlands Dutch applications.", date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"pl_PL-darkman-medium",              speaker:"Piper TTS Polish",             description:"Polish male voice with clear articulation. Well-suited for accessibility tools and content narration in Polish.", date:"Released: 2023", duration:"Sample: 0:48", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"sv_SE-nst-medium",                  speaker:"Piper TTS Swedish",            description:"Swedish voice trained on the NST dataset. Natural-sounding synthesis for Swedish language content.", date:"Released: 2023", duration:"Sample: 0:50", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"fi_FI-harri-medium",                speaker:"Piper TTS Finnish",            description:"Finnish male voice with proper vowel harmony and consonant gradation. Supports complex Finnish morphology.", date:"Released: 2023", duration:"Sample: 0:54", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"ca_ES-catalan-medium",              speaker:"Piper TTS Catalan",            description:"Catalan voice model for Catalonia and Valencia. Authentic pronunciation for regional Catalan dialects.", date:"Released: 2023", duration:"Sample: 0:48", location:"Piper v1.2.0", category:"European Voices" },
+  { title:"ru_RU-irina-medium",                speaker:"Piper TTS Russian",            description:"Russian female voice with natural prosody. Trained for high-quality Russian language synthesis applications.", date:"Released: 2023", duration:"Sample: 1:02", location:"Piper v1.2.0", category:"Slavic Voices" },
+  { title:"uk_UA-ukrainian_tts-medium",        speaker:"Piper TTS Ukrainian",          description:"Ukrainian voice model supporting modern Ukrainian language synthesis with accurate pronunciation and stress patterns.", date:"Released: 2023", duration:"Sample: 0:55", location:"Piper v1.2.0", category:"Slavic Voices" },
+  { title:"zh_CN-huayan-medium",               speaker:"Piper TTS Mandarin Chinese",   description:"Mandarin Chinese voice with proper tonal pronunciation. Optimized for simplified Chinese text synthesis.", date:"Released: 2023", duration:"Sample: 1:10", location:"Piper v1.2.0", category:"Asian Voices" },
+  { title:"ja_JP-hikari-medium",               speaker:"Piper TTS Japanese",           description:"Japanese female voice with natural pitch accent. Supports both hiragana and kanji text input with accurate readings.", date:"Released: 2023", duration:"Sample: 1:05", location:"Piper v1.2.0", category:"Asian Voices" },
+  { title:"ko_KR-kss-medium",                  speaker:"Piper TTS Korean",             description:"Korean voice trained on the KSS dataset. Clear pronunciation for Korean language applications and accessibility.", date:"Released: 2023", duration:"Sample: 0:58", location:"Piper v1.2.0", category:"Asian Voices" },
+  { title:"vi_VN-vivos-x_low",                speaker:"Piper TTS Vietnamese",         description:"Lightweight Vietnamese voice with proper tonal pronunciation. Efficient model for resource-constrained environments.", date:"Released: 2023", duration:"Sample: 0:42", location:"Piper v1.1.0", category:"Asian Voices" },
+  { title:"ar_SA-arabic-medium",               speaker:"Piper TTS Arabic",             description:"Modern Standard Arabic voice with proper diacritical pronunciation. Supports right-to-left text synthesis.", date:"Released: 2023", duration:"Sample: 1:00", location:"Piper v1.2.0", category:"Middle Eastern Voices" },
+  { title:"fa_IR-persian-medium",              speaker:"Piper TTS Persian (Farsi)",    description:"Persian voice model for Farsi language synthesis. Natural pronunciation for Iranian Persian applications.", date:"Released: 2023", duration:"Sample: 0:52", location:"Piper v1.2.0", category:"Middle Eastern Voices" },
+  { title:"pt_BR-faber-medium",                speaker:"Piper TTS Portuguese (Brazil)",description:"Brazilian Portuguese voice with authentic accent and intonation. Ideal for South American applications.", date:"Released: 2023", duration:"Sample: 0:56", location:"Piper v1.2.0", category:"Other Languages" },
+];
+
+const SEARCH_RESULTS = [
+  { title:"Piper TTS \u2013 English (US) Amy",   speaker:"Piper Neural Voice System", description:"Fast, local neural text-to-speech voice. High-quality American English female voice optimized for offline use and edge computing applications.", date:"Released 2023", duration:"Sample: 0:45", location:"Open Source", category:"Neural Voice" },
+  { title:"Piper TTS \u2013 English (GB) Jenny", speaker:"Piper Neural Voice System", description:"British English variant of Piper TTS with natural prosody and intonation. Designed for privacy-focused applications requiring local inference.", date:"Released 2023", duration:"Sample: 0:38", location:"Open Source", category:"Neural Voice" },
+  { title:"Piper TTS \u2013 German Thorsten",    speaker:"Piper Neural Voice System", description:"German language neural voice with low-latency processing. Part of the Piper multilingual collection supporting 40+ languages and accents.", date:"Released 2023", duration:"Sample: 0:52", location:"Open Source", category:"Neural Voice" },
+];
+
+const FEATURED   = [ALL_VOICES[0], ALL_VOICES[4], ALL_VOICES[6], ALL_VOICES[17]];
+const RECENT     = [ALL_VOICES[18], ALL_VOICES[7], ALL_VOICES[15], ALL_VOICES[20]];
+
+const CATEGORIES = [
+  { title:"English Voices",       count:6,  filterKey:"English Voices",       colorClass:"ic-blue",    icon: svgGlobe() },
+  { title:"European Voices",      count:9,  filterKey:"European Voices",      colorClass:"ic-emerald", icon: svgCpu() },
+  { title:"Asian Voices",         count:4,  filterKey:"Asian Voices",         colorClass:"ic-amber",   icon: svgPhone() },
+  { title:"Slavic Voices",        count:2,  filterKey:"Slavic Voices",        colorClass:"ic-purple",  icon: svgMic() },
+  { title:"Middle Eastern Voices",count:2,  filterKey:"Middle Eastern Voices",colorClass:"ic-pink",    icon: svgBot() },
+  { title:"Other Languages",      count:1,  filterKey:"Other Languages",      colorClass:"ic-red",     icon: svgRadio() },
+  { title:"Neural Models",        count:24, filterKey:"All Categories",       colorClass:"ic-indigo",  icon: svgZap() },
+  { title:"Open Source",          count:24, filterKey:"All Categories",       colorClass:"ic-rose",    icon: svgBook() },
+];
+
+const BROWSE_CATS = ["All Categories","English Voices","European Voices","Slavic Voices","Asian Voices","Middle Eastern Voices","Other Languages"];
+
+/* ------------------------------------------------------------------
+   STATE
+------------------------------------------------------------------ */
+let currentPage     = "home";
+let selectedVoice   = null;
+let browseCategory  = "All Categories";
+let filteredCache   = [];
+
+let isPlaying     = false;
+let playInterval  = null;
+let playProgress  = 0;   // 0-100
+
+/* ------------------------------------------------------------------
+   NAVIGATION
+------------------------------------------------------------------ */
+function nav(page, category) {
+  stopAudio();
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+
+  currentPage = page;
+
+  if (page === "home") {
+    document.getElementById("page-home").classList.add("active");
+  } else if (page === "browse") {
+    if (category !== undefined) browseCategory = category;
+    document.getElementById("page-browse").classList.add("active");
+    document.getElementById("browseSearchInput").value = "";
+    renderBadges();
+    renderBrowseGrid();
+  } else if (page === "detail") {
+    document.getElementById("page-detail").classList.add("active");
+    populateDetail();
+  }
+
+  window.scrollTo(0, 0);
+}
+
+function openVoice(voice) {
+  selectedVoice = voice;
+  nav("detail");
+}
+
+/* ------------------------------------------------------------------
+   HERO SEARCH
+------------------------------------------------------------------ */
+function heroSearch() {
+  const q = document.getElementById("heroSearchInput").value.trim();
+  nav("browse", "All Categories");
+  if (q) {
+    document.getElementById("browseSearchInput").value = q;
+    renderBrowseGrid();
+  }
+}
+
+/* ------------------------------------------------------------------
+   SVG HELPERS
+------------------------------------------------------------------ */
+function mkSvg(paths) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+}
+function svgGlobe()  { return mkSvg('<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>'); }
+function svgCpu()    { return mkSvg('<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M20 15h2M9 2v2M9 20v2M2 9h2M20 9h2"/>'); }
+function svgPhone()  { return mkSvg('<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>'); }
+function svgMic()    { return mkSvg('<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>'); }
+function svgBot()    { return mkSvg('<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>'); }
+function svgRadio()  { return mkSvg('<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>'); }
+function svgZap()    { return mkSvg('<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>'); }
+function svgBook()   { return mkSvg('<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'); }
+function svgCal()    { return mkSvg('<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>'); }
+function svgClock()  { return mkSvg('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'); }
+function svgPin()    { return mkSvg('<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>'); }
+function svgPlay()   { return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><polygon points="6 3 20 12 6 21 6 3"/></svg>`; }
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+/* ------------------------------------------------------------------
+   VOICE CARD
+------------------------------------------------------------------ */
+function voiceCardHTML(voice, clickExpr) {
+  return `
+    <div class="card voice-card" onclick="${clickExpr}" style="cursor:pointer">
+      <div class="vc-header">
+        <div class="vc-top">
+          <span class="badge badge-solid">${esc(voice.category)}</span>
+          <button class="btn btn-outline btn-icon" onclick="event.stopPropagation()" title="Play sample" style="flex-shrink:0">
+            ${svgPlay()}
+          </button>
+        </div>
+        <div class="vc-title">${esc(voice.title)}</div>
+        <div class="vc-speaker">${esc(voice.speaker)}</div>
+      </div>
+      <div class="vc-body">
+        <p class="vc-desc">${esc(voice.description)}</p>
+        <div class="vc-meta">
+          <span>${svgCal()}${esc(voice.date)}</span>
+          <span>${svgClock()}${esc(voice.duration)}</span>
+          <span>${svgPin()}${esc(voice.location)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------------
+   HOME RENDERING
+------------------------------------------------------------------ */
+function renderHome() {
+  // Search results
+  document.getElementById("homeSearchGrid").innerHTML =
+    SEARCH_RESULTS.map((v,i) => voiceCardHTML(v, `openSearchVoice(${i})`)).join("");
+
+  // Category cards
+  document.getElementById("homeCatGrid").innerHTML =
+    CATEGORIES.map(c => `
+      <div class="cat-card" onclick="nav('browse','${esc(c.filterKey)}')">
+        <div class="cat-icon-wrap ${c.colorClass}">${c.icon}</div>
+        <div class="cat-name">${esc(c.title)}</div>
+        <div class="cat-count-label">${c.count} voices</div>
+      </div>
+    `).join("");
+
+  // Featured tab
+  document.getElementById("featuredGrid").innerHTML =
+    FEATURED.map((v,i) => voiceCardHTML(v, `openFeaturedVoice(${i})`)).join("");
+
+  // Recent tab
+  document.getElementById("recentGrid").innerHTML =
+    RECENT.map((v,i) => voiceCardHTML(v, `openRecentVoice(${i})`)).join("");
+}
+
+function openSearchVoice(i)  { openVoice(SEARCH_RESULTS[i]); }
+function openFeaturedVoice(i){ openVoice(FEATURED[i]); }
+function openRecentVoice(i)  { openVoice(RECENT[i]); }
+
+/* ------------------------------------------------------------------
+   TAB SWITCHING
+------------------------------------------------------------------ */
+function switchTab(tab) {
+  const isFeat = tab === "featured";
+  document.getElementById("tabFeatured").classList.toggle("active",  isFeat);
+  document.getElementById("tabRecent").classList.toggle("active",   !isFeat);
+  document.getElementById("panelFeatured").classList.toggle("active", isFeat);
+  document.getElementById("panelRecent").classList.toggle("active",  !isFeat);
+}
+
+/* ------------------------------------------------------------------
+   BROWSE PAGE
+------------------------------------------------------------------ */
+function renderBadges() {
+  document.getElementById("browseBadgeRow").innerHTML =
+    BROWSE_CATS.map(cat => {
+      const active = cat === browseCategory ? "active" : "";
+      return `<span class="badge badge-outline badge-filter ${active}" onclick="setBrowseCat('${esc(cat)}')">${esc(cat)}</span>`;
+    }).join("");
+}
+
+function setBrowseCat(cat) {
+  browseCategory = cat;
+  renderBadges();
+  renderBrowseGrid();
+}
+
+function renderBrowseGrid() {
+  const q    = (document.getElementById("browseSearchInput").value || "").toLowerCase();
+  const sort = document.getElementById("browseSortSelect").value;
+
+  let filtered = ALL_VOICES.filter(v => {
+    const catOk    = browseCategory === "All Categories" || v.category === browseCategory;
+    const searchOk = !q || [v.title, v.speaker, v.description].some(s => s.toLowerCase().includes(q));
+    return catOk && searchOk;
+  });
+
+  filtered = [...filtered].sort((a, b) => {
+    if (sort === "oldest") return a.date.localeCompare(b.date);
+    if (sort === "name")   return a.title.localeCompare(b.title);
+    return b.date.localeCompare(a.date);
+  });
+
+  filteredCache = filtered;
+
+  const grid      = document.getElementById("browseGrid");
+  const noResults = document.getElementById("browseNoResults");
+  const countEl   = document.getElementById("browseCount");
+
+  const label = browseCategory !== "All Categories" ? ` in ${browseCategory}` : "";
+  countEl.textContent = `Showing ${filtered.length} ${filtered.length === 1 ? "voice" : "voices"}${label}`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = "";
+    grid.style.display = "none";
+    noResults.style.display = "block";
+  } else {
+    noResults.style.display = "none";
+    grid.style.display = "";
+    grid.innerHTML = filtered.map((v,i) => voiceCardHTML(v, `openBrowseVoice(${i})`)).join("");
+  }
+}
+
+function openBrowseVoice(i) { openVoice(filteredCache[i]); }
+
+function clearBrowse() {
+  browseCategory = "All Categories";
+  document.getElementById("browseSearchInput").value = "";
+  renderBadges();
+  renderBrowseGrid();
+}
+
+/* ------------------------------------------------------------------
+   DETAIL PAGE
+------------------------------------------------------------------ */
+function populateDetail() {
+  if (!selectedVoice) return;
+  const v = selectedVoice;
+
+  setText("dCategory",   v.category);
+  setText("dTitle",      v.title);
+  setText("dSpeaker",    v.speaker);
+  setText("dDate",       v.date);
+  setText("dDuration",   v.duration);
+  setText("dLocation",   v.location);
+  setText("dDesc",       v.description);
+  setText("apTitle",     v.title);
+  setText("apSub",       v.speaker);
+  setText("specCategory",v.category);
+  setText("specPlatform",v.location);
+  setText("usagePlatform",
+    `This voice was originally designed for ${v.location}. The archived sample has been preserved in its original format for historical accuracy.`
+  );
+  setText("usageAttribution",
+    `When using these archived samples, please credit the Virtual Voice Archive and reference the original ${v.speaker}.`
+  );
+
+  // Reset audio player
+  playProgress = 0;
+  isPlaying    = false;
+  document.getElementById("apFill").style.width = "0%";
+  document.getElementById("apTime").textContent = `0:00 / ${v.duration.replace("Sample: ","")}`;
+  setPlayIcon(false);
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+/* ------------------------------------------------------------------
+   AUDIO PLAYER (simulated)
+------------------------------------------------------------------ */
+function togglePlay() {
+  isPlaying = !isPlaying;
+  setPlayIcon(isPlaying);
+
+  if (isPlaying) {
+    playInterval = setInterval(() => {
+      playProgress += 100 / 600; // ~10 seconds per full progress tick at 60fps simulation
+      if (playProgress >= 100) {
+        playProgress = 0;
+        isPlaying    = false;
+        setPlayIcon(false);
+        clearInterval(playInterval);
+      }
+      document.getElementById("apFill").style.width = playProgress + "%";
+      updateAudioTime();
+    }, 100);
+  } else {
+    clearInterval(playInterval);
+  }
+}
+
+function updateAudioTime() {
+  if (!selectedVoice) return;
+  const dStr  = selectedVoice.duration.replace("Sample: ", "");
+  const parts = dStr.split(":");
+  const total = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  const done  = Math.floor(total * playProgress / 100);
+  const m     = Math.floor(done / 60);
+  const s     = done % 60;
+  document.getElementById("apTime").textContent = `${m}:${String(s).padStart(2,"0")} / ${dStr}`;
+}
+
+function seekAudio(e) {
+  const bar  = document.getElementById("apBar");
+  const rect = bar.getBoundingClientRect();
+  playProgress = Math.max(0, Math.min(100, (e.clientX - rect.left) / rect.width * 100));
+  document.getElementById("apFill").style.width = playProgress + "%";
+  updateAudioTime();
+}
+
+function setPlayIcon(playing) {
+  const btn = document.getElementById("apPlayBtn");
+  if (!btn) return;
+  if (playing) {
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+      <rect x="6"  y="4" width="4" height="16"/>
+      <rect x="14" y="4" width="4" height="16"/>
+    </svg>`;
+  } else {
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+      <polygon points="6 3 20 12 6 21 6 3"/>
+    </svg>`;
+  }
+}
+
+function stopAudio() {
+  clearInterval(playInterval);
+  isPlaying    = false;
+  playProgress = 0;
+}
+
+/* ------------------------------------------------------------------
+   MOBILE MENU
+------------------------------------------------------------------ */
+function toggleMobileMenu() {
+  document.getElementById("mobileMenu").classList.toggle("open");
+}
+function closeMobileMenu() {
+  document.getElementById("mobileMenu").classList.remove("open");
+}
+
+/* ------------------------------------------------------------------
+   INIT
+------------------------------------------------------------------ */
+renderHome();
+</script>
+</body>
+</html>

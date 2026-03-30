@@ -268,10 +268,11 @@ const categories = [
 interface BrowsePageProps {
   onBackToHome: () => void;
   onVoiceClick: (voice: any) => void;
+  initialCategory?: string;
 }
 
-export function BrowsePage({ onBackToHome, onVoiceClick }: BrowsePageProps) {
-  const [selectedCategory, setSelectedCategory] = useState("All Categories");
+export function BrowsePage({ onBackToHome, onVoiceClick, initialCategory = "All Categories" }: BrowsePageProps) {
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 

@@ -11,10 +11,16 @@ import { VoiceDetailPage, VoiceData } from "./components/VoiceDetailPage";
 export default function App() {
   const [currentPage, setCurrentPage] = useState<"home" | "browse" | "detail">("home");
   const [selectedVoice, setSelectedVoice] = useState<VoiceData | null>(null);
+  const [browseCategory, setBrowseCategory] = useState<string>("All Categories");
 
   const handleVoiceClick = (voice: VoiceData) => {
     setSelectedVoice(voice);
     setCurrentPage("detail");
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setBrowseCategory(category);
+    setCurrentPage("browse");
   };
 
   const handleBackToBrowse = () => {
@@ -25,6 +31,7 @@ export default function App() {
   const handleBackToHome = () => {
     setCurrentPage("home");
     setSelectedVoice(null);
+    setBrowseCategory("All Categories");
   };
 
   return (
@@ -34,17 +41,18 @@ export default function App() {
         <>
           <Hero />
           <SearchResults onVoiceClick={handleVoiceClick} />
-          <Categories />
+          <Categories onCategoryClick={handleCategoryClick} />
           <FeaturedVoices onVoiceClick={handleVoiceClick} />
           <Footer />
         </>
       ) : currentPage === "browse" ? (
-        <BrowsePage 
-          onBackToHome={handleBackToHome} 
+        <BrowsePage
+          onBackToHome={handleBackToHome}
           onVoiceClick={handleVoiceClick}
+          initialCategory={browseCategory}
         />
       ) : currentPage === "detail" && selectedVoice ? (
-        <VoiceDetailPage 
+        <VoiceDetailPage
           voice={selectedVoice}
           onBack={handleBackToBrowse}
           relatedVoices={[]}

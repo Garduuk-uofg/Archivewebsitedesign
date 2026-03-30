@@ -7,52 +7,64 @@ const categories = [
     title: "English Voices",
     count: "6",
     color: "text-blue-600",
+    filterKey: "English Voices",
   },
   {
     icon: Cpu,
     title: "European Voices",
     count: "9",
     color: "text-emerald-600",
+    filterKey: "European Voices",
   },
   {
     icon: Smartphone,
     title: "Asian Voices",
     count: "4",
     color: "text-amber-600",
+    filterKey: "Asian Voices",
   },
   {
     icon: Mic,
     title: "Slavic Voices",
     count: "2",
     color: "text-purple-600",
+    filterKey: "Slavic Voices",
   },
   {
     icon: Bot,
     title: "Middle Eastern Voices",
     count: "2",
     color: "text-pink-600",
+    filterKey: "Middle Eastern Voices",
   },
   {
     icon: Radio,
     title: "Other Languages",
     count: "1",
     color: "text-red-600",
+    filterKey: "Other Languages",
   },
   {
     icon: Zap,
     title: "Neural Models",
     count: "24",
     color: "text-indigo-600",
+    filterKey: "All Categories",
   },
   {
     icon: BookOpen,
     title: "Open Source",
     count: "24",
     color: "text-rose-600",
+    filterKey: "All Categories",
   },
 ];
 
-export function Categories() {
+interface CategoriesProps {
+  onCategoryClick: (category: string) => void;
+}
+
+export function Categories({ onCategoryClick }: CategoriesProps) {
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
@@ -67,9 +79,10 @@ export function Categories() {
           {categories.map((category) => {
             const Icon = category.icon;
             return (
-              <Card 
+              <Card
                 key={category.title}
                 className="hover:shadow-md transition-shadow cursor-pointer group"
+                onClick={() => onCategoryClick(category.filterKey)}
               >
                 <CardContent className="p-6 text-center space-y-3">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 group-hover:bg-slate-100 transition-colors">
